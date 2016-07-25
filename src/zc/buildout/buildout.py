@@ -1624,7 +1624,7 @@ def _open(base, filename, seen, dl_options, override, downloaded):
         dl_options = _update_section(dl_options, result['buildout'])
 
     if extends:
-        extends = extends.split()
+        extends = _sub_extends(extends, override.copy())
         eresult = _open(base, extends.pop(0), seen, dl_options, override,
                         downloaded)
         for fname in extends:
@@ -1634,6 +1634,17 @@ def _open(base, filename, seen, dl_options, override, downloaded):
 
     seen.pop()
     return result
+
+def _sub_extends(extends, override):
+    """Apply substitution for extends option
+    """
+    data = _unannotate(dict([('buildout', override)]))
+    data['buildout']['extends'] = extends
+    data_ops = Options(data, 'buildout', data['buildout'])
+    data['buildout'] = data_ops
+    # utilize Options' _sub
+    ops = Options(data, 'buildout', data['buildout'])
+    return ops.get('extends').split()
 
 
 ignore_directories = '.svn', 'CVS', '__pycache__'
